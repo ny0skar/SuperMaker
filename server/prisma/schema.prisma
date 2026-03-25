@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Plan {
+  FREE
+  PREMIUM
+}
+
+enum VisitStatus {
+  ACTIVE
+  FINISHED
+}
+
+enum Unit {
+  PIECE
+  KG
+  G
+  L
+  ML
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  displayName   String?
+  avatarUrl     String?
+  locale        String    @default("es")
+  plan          Plan      @default(FREE)
+  planExpiresAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  stores        Store[]
+  visits        Visit[]
+
+  @@map("users")
+}
+
+model Store {
+  id        String   @id @default(uuid())
+  name      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  visits    Visit[]
+  createdAt DateTime @default(now())
+
+  @@map("stores")
+}
+
+model Visit {
+  id         String      @id @default(uuid())
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storeId    String
+  store      Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  status     VisitStatus @default(ACTIVE)
+  total      Decimal     @default(0) @db.Decimal(10, 2)
+  ticketUrl  String?
+  createdAt  DateTime    @default(now())
+  finishedAt DateTime?
+  items      VisitItem[]
+
+  @@map("visits")
+}
+
+model VisitItem {
+  id           String    @id @default(uuid())
+  visitId      String
+  visit        Visit     @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  name         String
+  pricePerUnit Decimal   @db.Decimal(10, 2)
+  quantity     Decimal   @db.Decimal(10, 3)
+  unit         Unit      @default(PIECE)
+  subtotal     Decimal   @db.Decimal(10, 2)
+  expiresAt    DateTime?
+  barcode      String?
+  createdAt    DateTime  @default(now())
+
+  @@map("visit_items")
+}

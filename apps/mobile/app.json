@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "SuperMaker",
+    "slug": "supermaker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "supermaker",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0d631b"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.supermaker.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0d631b",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "com.supermaker.app",
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-localization"
+    ]
+  }
+}

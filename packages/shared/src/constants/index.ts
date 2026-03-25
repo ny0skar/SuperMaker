@@ -1,0 +1,7 @@
+export const FREE_MAX_STORES = 1;
+export const FREE_MAX_ITEMS_PER_VISIT = 15;
+export const PASSWORD_MIN_LENGTH = 8;
+export const CURRENCY = "MXN";
+export const CURRENCY_SYMBOL = "$";
+export const SUPPORTED_LOCALES = ["es", "en"] as const;
+export const DEFAULT_LOCALE = "es";
