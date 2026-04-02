@@ -43,7 +43,7 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({ limit: "100kb" }));
 
 // Rate limiting
 const limiter = rateLimit({

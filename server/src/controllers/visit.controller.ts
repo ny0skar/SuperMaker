@@ -1,6 +1,5 @@
 import { Response } from "express";
 import { z } from "zod";
-import { Decimal } from "@prisma/client/runtime/library";
 import { prisma } from "../utils/prisma.js";
 import { AuthRequest } from "../middleware/auth.js";
 import { FREE_MAX_ITEMS_PER_VISIT } from "@supermaker/shared";
@@ -145,27 +144,26 @@ export async function addItem(
 
   const subtotal = parsed.data.pricePerUnit * parsed.data.quantity;
 
-  const item = await prisma.visitItem.create({
-    data: {
-      visitId: visit.id,
-      name: parsed.data.name,
-      pricePerUnit: parsed.data.pricePerUnit,
-      quantity: parsed.data.quantity,
-      unit: parsed.data.unit,
-      subtotal,
-      expiresAt: parsed.data.expiresAt
-        ? new Date(parsed.data.expiresAt)
-        : null,
-      barcode: parsed.data.barcode ?? null,
-    },
-  });
-
-  // Update visit total
-  const newTotal = new Decimal(visit.total).plus(new Decimal(subtotal));
-  await prisma.visit.update({
-    where: { id: visit.id },
-    data: { total: newTotal },
-  });
+  const [item] = await prisma.$transaction([
+    prisma.visitItem.create({
+      data: {
+        visitId: visit.id,
+        name: parsed.data.name,
+        pricePerUnit: parsed.data.pricePerUnit,
+        quantity: parsed.data.quantity,
+        unit: parsed.data.unit,
+        subtotal,
+        expiresAt: parsed.data.expiresAt
+          ? new Date(parsed.data.expiresAt)
+          : null,
+        barcode: parsed.data.barcode ?? null,
+      },
+    }),
+    prisma.visit.update({
+      where: { id: visit.id },
+      data: { total: { increment: subtotal } },
+    }),
+  ]);
 
   res.status(201).json({
     success: true,
@@ -214,27 +212,27 @@ export async function updateItem(
   const newSubtotal = newPrice * newQty;
   const oldSubtotal = Number(item.subtotal);
 
-  const updated = await prisma.visitItem.update({
-    where: { id: item.id },
-    data: {
-      ...parsed.data,
-      expiresAt:
-        parsed.data.expiresAt === null
-          ? null
-          : parsed.data.expiresAt
-            ? new Date(parsed.data.expiresAt)
-            : undefined,
-      subtotal: newSubtotal,
-    },
-  });
-
-  // Update visit total
   const totalDiff = newSubtotal - oldSubtotal;
-  const newTotal = new Decimal(visit.total).plus(new Decimal(totalDiff));
-  await prisma.visit.update({
-    where: { id: visit.id },
-    data: { total: newTotal.lessThan(0) ? 0 : newTotal },
-  });
+
+  const [updated] = await prisma.$transaction([
+    prisma.visitItem.update({
+      where: { id: item.id },
+      data: {
+        ...parsed.data,
+        expiresAt:
+          parsed.data.expiresAt === null
+            ? null
+            : parsed.data.expiresAt
+              ? new Date(parsed.data.expiresAt)
+              : undefined,
+        subtotal: newSubtotal,
+      },
+    }),
+    prisma.visit.update({
+      where: { id: visit.id },
+      data: { total: { increment: totalDiff } },
+    }),
+  ]);
 
   res.json({ success: true, data: updated } satisfies ApiResponse);
 }
@@ -266,14 +264,13 @@ export async function deleteItem(
     return;
   }
 
-  await prisma.visitItem.delete({ where: { id: item.id } });
-
-  // Update visit total
-  const newTotal = new Decimal(visit.total).minus(item.subtotal);
-  await prisma.visit.update({
-    where: { id: visit.id },
-    data: { total: newTotal.lessThan(0) ? 0 : newTotal },
-  });
+  await prisma.$transaction([
+    prisma.visitItem.delete({ where: { id: item.id } }),
+    prisma.visit.update({
+      where: { id: visit.id },
+      data: { total: { decrement: Number(item.subtotal) } },
+    }),
+  ]);
 
   res.json({ success: true } satisfies ApiResponse);
 }
