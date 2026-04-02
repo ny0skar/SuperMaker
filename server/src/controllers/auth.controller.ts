@@ -4,8 +4,10 @@ import { z } from "zod";
 import { prisma } from "../utils/prisma.js";
 import {
   signAccessToken,
-  signRefreshToken,
-  verifyRefreshToken,
+  createStoredRefreshToken,
+  verifyStoredRefreshToken,
+  revokeRefreshToken,
+  revokeAllUserRefreshTokens,
 } from "../utils/jwt.js";
 import { AuthRequest } from "../middleware/auth.js";
 import { PASSWORD_MIN_LENGTH } from "@supermaker/shared";
@@ -59,6 +61,8 @@ export async function register(req: Request, res: Response): Promise<void> {
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
+    // Hash a dummy password so response time is consistent whether email exists or not
+    await bcrypt.hash(password, 12);
     res.status(409).json({
       success: false,
       error: "Email already registered",
@@ -78,9 +82,10 @@ export async function register(req: Request, res: Response): Promise<void> {
   });
 
   const userPublic = toUserPublic(user);
+  const refreshToken = await createStoredRefreshToken(user.id);
   const tokens = {
     accessToken: signAccessToken({ userId: user.id }),
-    refreshToken: signRefreshToken({ userId: user.id }),
+    refreshToken,
   };
 
   res.status(201).json({
@@ -120,9 +125,10 @@ export async function login(req: Request, res: Response): Promise<void> {
   }
 
   const userPublic = toUserPublic(user);
+  const refreshToken = await createStoredRefreshToken(user.id);
   const tokens = {
     accessToken: signAccessToken({ userId: user.id }),
-    refreshToken: signRefreshToken({ userId: user.id }),
+    refreshToken,
   };
 
   res.json({
@@ -131,22 +137,27 @@ export async function login(req: Request, res: Response): Promise<void> {
   } satisfies ApiResponse<AuthResponse>);
 }
 
+const refreshSchema = z.object({
+  refreshToken: z.string().min(1, "Refresh token required"),
+});
+
 export async function refreshToken(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const { refreshToken: token } = req.body;
-
-  if (!token) {
+  const parsed = refreshSchema.safeParse(req.body);
+  if (!parsed.success) {
     res.status(400).json({
       success: false,
-      error: "Refresh token required",
+      error: parsed.error.errors[0].message,
     } satisfies ApiResponse);
     return;
   }
 
+  const token = parsed.data.refreshToken;
+
   try {
-    const payload = verifyRefreshToken(token);
+    const payload = await verifyStoredRefreshToken(token);
 
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
@@ -158,9 +169,13 @@ export async function refreshToken(
       return;
     }
 
+    // Revoke the old token and issue a new one (token rotation)
+    await revokeRefreshToken(token);
+    const newRefreshToken = await createStoredRefreshToken(user.id);
+
     const tokens = {
       accessToken: signAccessToken({ userId: user.id }),
-      refreshToken: signRefreshToken({ userId: user.id }),
+      refreshToken: newRefreshToken,
     };
 
     res.json({
@@ -265,6 +280,24 @@ export async function changePassword(
     where: { id: req.userId },
     data: { passwordHash },
   });
+
+  // Revoke all refresh tokens — forces re-login on all devices
+  await revokeAllUserRefreshTokens(req.userId!);
+
+  res.json({ success: true } satisfies ApiResponse);
+}
+
+export async function logout(req: Request, res: Response): Promise<void> {
+  const parsed = refreshSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({
+      success: false,
+      error: parsed.error.errors[0].message,
+    } satisfies ApiResponse);
+    return;
+  }
+
+  await revokeRefreshToken(parsed.data.refreshToken);
 
   res.json({ success: true } satisfies ApiResponse);
 }

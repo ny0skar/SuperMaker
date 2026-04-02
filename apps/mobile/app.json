@@ -34,6 +34,13 @@
       "expo-router",
       "expo-secure-store",
       "expo-localization"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c51fdbc9-f36c-4ee8-8395-7f5247e58bc6"
+      }
+    },
+    "owner": "nyoskar"
   }
 }
