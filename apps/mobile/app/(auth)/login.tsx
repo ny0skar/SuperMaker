@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../hooks/useThemeColors";
 import { useAuthStore } from "../../store/authStore";
+import { useBiometrics } from "../../hooks/useBiometrics";
 import { ThemedInput } from "../../components/ThemedInput";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { spacing, radius } from "../../theme";
@@ -22,17 +23,36 @@ export default function LoginScreen() {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const login = useAuthStore((s) => s.login);
+  const loginWithRefreshToken = useAuthStore((s) => s.loginWithRefreshToken);
+  const lastRefreshToken = useAuthStore((s) => s.lastRefreshToken);
+
+  const {
+    isAvailable,
+    isEnabled,
+    getBiometricLabel,
+    getBiometricIcon,
+    enableBiometrics,
+    disableBiometrics,
+    authenticateWithBiometrics,
+    hasBiometricToken,
+  } = useBiometrics();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [biometricReady, setBiometricReady] = useState(false);
+
+  useEffect(() => {
+    hasBiometricToken().then(setBiometricReady);
+  }, []);
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) return;
     setLoading(true);
     try {
       await login(email.trim(), password);
+      await promptBiometricSetup();
       router.replace("/(tabs)/dashboard");
     } catch (err: any) {
       const msg =
@@ -43,9 +63,59 @@ export default function LoginScreen() {
     }
   };
 
+  const promptBiometricSetup = async () => {
+    const token = useAuthStore.getState().lastRefreshToken;
+    if (!isAvailable || isEnabled || !token) return;
+
+    return new Promise<void>((resolve) => {
+      const label = getBiometricLabel();
+      Alert.alert(
+        label,
+        `¿Deseas activar ${label} para acceder más rápido la próxima vez?`,
+        [
+          { text: "No, gracias", style: "cancel", onPress: () => resolve() },
+          {
+            text: "Activar",
+            onPress: async () => {
+              await enableBiometrics(token);
+              resolve();
+            },
+          },
+        ],
+      );
+    });
+  };
+
+  const handleBiometricLogin = async () => {
+    setLoading(true);
+    try {
+      const refreshToken = await authenticateWithBiometrics();
+      if (!refreshToken) {
+        setLoading(false);
+        return;
+      }
+
+      await loginWithRefreshToken(refreshToken);
+      // Update biometric token with the new rotated refresh token
+      const newToken = useAuthStore.getState().lastRefreshToken;
+      if (newToken) await enableBiometrics(newToken);
+      router.replace("/(tabs)/dashboard");
+    } catch {
+      // Token was revoked (password changed, etc.)
+      await disableBiometrics();
+      setBiometricReady(false);
+      Alert.alert(
+        "Sesión expirada",
+        "Tu sesión biométrica expiró. Por favor inicia sesión con tu contraseña.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: colors.surface }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
@@ -124,6 +194,28 @@ export default function LoginScreen() {
               loading={loading}
               disabled={!email.trim() || !password.trim()}
             />
+
+            {biometricReady && isAvailable && (
+              <TouchableOpacity
+                style={[
+                  styles.biometricButton,
+                  { borderColor: colors.outline },
+                ]}
+                onPress={handleBiometricLogin}
+                disabled={loading}
+              >
+                <Ionicons
+                  name={getBiometricIcon() as any}
+                  size={24}
+                  color={colors.primary}
+                />
+                <Text
+                  style={[styles.biometricText, { color: colors.primary }]}
+                >
+                  Entrar con {getBiometricLabel()}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={styles.footer}>
@@ -190,6 +282,19 @@ const styles = StyleSheet.create({
   },
   formFields: {
     gap: spacing.lg,
+  },
+  biometricButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    paddingVertical: 14,
+    borderRadius: radius.lg,
+    borderWidth: 1.5,
+  },
+  biometricText: {
+    fontSize: 16,
+    fontWeight: "600",
   },
   footer: {
     flexDirection: "row",

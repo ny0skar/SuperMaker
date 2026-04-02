@@ -12,8 +12,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import { useThemeColors } from "../../hooks/useThemeColors";
 import { useAuthStore } from "../../store/authStore";
+import { useBiometrics } from "../../hooks/useBiometrics";
 import { ThemedText } from "../../components/ThemedText";
 import { ThemedInput } from "../../components/ThemedInput";
 import { PrimaryButton } from "../../components/PrimaryButton";
@@ -34,6 +36,15 @@ export default function ProfileScreen() {
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
   const [changingPass, setChangingPass] = useState(false);
+
+  const {
+    isAvailable: biometricAvailable,
+    isEnabled: biometricEnabled,
+    getBiometricLabel,
+    getBiometricIcon,
+    enableBiometrics,
+    disableBiometrics,
+  } = useBiometrics();
 
   const handleUpdateProfile = async () => {
     setSaving(true);
@@ -205,6 +216,57 @@ export default function ProfileScreen() {
             <ThemedText variant="title">{t("profile.security")}</ThemedText>
           </View>
           <View style={{ gap: spacing.lg }}>
+            {biometricAvailable && (
+              <TouchableOpacity
+                style={[
+                  styles.biometricRow,
+                  { backgroundColor: colors.surfaceContainerHighest },
+                ]}
+                onPress={async () => {
+                  if (biometricEnabled) {
+                    await disableBiometrics();
+                  } else {
+                    const token = await SecureStore.getItemAsync("refreshToken");
+                    if (token) {
+                      const ok = await enableBiometrics(token);
+                      if (!ok) {
+                        Alert.alert("Error", "No se pudo activar la autenticación biométrica.");
+                      }
+                    }
+                  }
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={styles.biometricInfo}>
+                  <Ionicons
+                    name={getBiometricIcon() as any}
+                    size={22}
+                    color={colors.primary}
+                  />
+                  <View>
+                    <Text style={[styles.biometricLabel, { color: colors.onSurface }]}>
+                      {getBiometricLabel()}
+                    </Text>
+                    <Text style={[styles.biometricHint, { color: colors.onSurfaceVariant }]}>
+                      Acceso rápido sin contraseña
+                    </Text>
+                  </View>
+                </View>
+                <Switch
+                  value={biometricEnabled}
+                  onValueChange={async (value) => {
+                    if (!value) {
+                      await disableBiometrics();
+                    } else {
+                      const token = await SecureStore.getItemAsync("refreshToken");
+                      if (token) await enableBiometrics(token);
+                    }
+                  }}
+                  trackColor={{ true: colors.primary }}
+                />
+              </TouchableOpacity>
+            )}
+
             <ThemedInput
               label={t("profile.currentPassword")}
               value={currentPass}
@@ -338,6 +400,27 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   langHint: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  biometricRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: spacing.lg,
+    borderRadius: radius.lg,
+  },
+  biometricInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    flex: 1,
+  },
+  biometricLabel: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  biometricHint: {
     fontSize: 12,
     marginTop: 2,
   },

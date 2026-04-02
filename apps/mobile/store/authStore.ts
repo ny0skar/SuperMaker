@@ -17,9 +17,11 @@ interface AuthState {
   user: UserPublic | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  lastRefreshToken: string | null;
 
   initialize: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
+  loginWithRefreshToken: (refreshToken: string) => Promise<void>;
   register: (
     email: string,
     password: string,
@@ -34,6 +36,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isLoading: true,
   isAuthenticated: false,
+  lastRefreshToken: null,
 
   initialize: async () => {
     try {
@@ -63,7 +66,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await SecureStore.setItemAsync("accessToken", tokens.accessToken);
     await SecureStore.setItemAsync("refreshToken", tokens.refreshToken);
 
-    set({ user, isAuthenticated: true });
+    set({ user, isAuthenticated: true, lastRefreshToken: tokens.refreshToken });
+  },
+
+  loginWithRefreshToken: async (refreshToken) => {
+    const res = await api.post("/auth/refresh", { refreshToken });
+    const { accessToken, refreshToken: newRefresh } = res.data.data.tokens;
+
+    await SecureStore.setItemAsync("accessToken", accessToken);
+    await SecureStore.setItemAsync("refreshToken", newRefresh);
+
+    const meRes = await api.get("/auth/me");
+
+    set({
+      user: meRes.data.data,
+      isAuthenticated: true,
+      lastRefreshToken: newRefresh,
+    });
   },
 
   register: async (email, password, displayName) => {
@@ -77,7 +96,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await SecureStore.setItemAsync("accessToken", tokens.accessToken);
     await SecureStore.setItemAsync("refreshToken", tokens.refreshToken);
 
-    set({ user, isAuthenticated: true });
+    set({ user, isAuthenticated: true, lastRefreshToken: tokens.refreshToken });
   },
 
   logout: async () => {

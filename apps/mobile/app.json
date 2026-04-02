@@ -33,7 +33,14 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "SuperMaker usa Face ID para acceder a tu cuenta de forma rápida y segura."
+        }
+      ],
+      "expo-font"
     ],
     "extra": {
       "router": {},
