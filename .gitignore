@@ -34,5 +34,8 @@ Thumbs.db
 *.log
 npm-debug.log*
 
+# Database backups
+backups/
+
 # Duplicate lock files
 package-lock 2.json
