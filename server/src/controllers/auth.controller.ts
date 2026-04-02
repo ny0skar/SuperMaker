@@ -10,6 +10,7 @@ import {
   revokeAllUserRefreshTokens,
 } from "../utils/jwt.js";
 import { AuthRequest } from "../middleware/auth.js";
+import { bruteForceStore } from "../middleware/brute-force.js";
 import { PASSWORD_MIN_LENGTH } from "@supermaker/shared";
 import type { UserPublic, AuthResponse, ApiResponse } from "@supermaker/shared";
 
@@ -105,9 +106,11 @@ export async function login(req: Request, res: Response): Promise<void> {
   }
 
   const { email, password } = parsed.data;
+  const ip = req.ip || req.socket.remoteAddress || "unknown";
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
+    bruteForceStore.recordFailure(ip, email);
     res.status(401).json({
       success: false,
       error: "Invalid credentials",
@@ -117,12 +120,16 @@ export async function login(req: Request, res: Response): Promise<void> {
 
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) {
+    bruteForceStore.recordFailure(ip, email);
     res.status(401).json({
       success: false,
       error: "Invalid credentials",
     } satisfies ApiResponse);
     return;
   }
+
+  // Login successful — clear brute force counters
+  bruteForceStore.recordSuccess(ip, email);
 
   const userPublic = toUserPublic(user);
   const refreshToken = await createStoredRefreshToken(user.id);

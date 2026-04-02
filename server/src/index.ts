@@ -45,9 +45,9 @@ app.use(
 
 app.use(express.json({ limit: "100kb" }));
 
-// Rate limiting
+// Rate limiting — general: 100 req/min
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 60 * 1000,
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
@@ -55,10 +55,12 @@ const limiter = rateLimit({
 });
 app.use("/api/", limiter);
 
-// Stricter rate limit for auth endpoints
+// Stricter rate limit for auth endpoints — 10 req/min
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: {
     success: false,
     error: "Too many auth attempts, try again later",
