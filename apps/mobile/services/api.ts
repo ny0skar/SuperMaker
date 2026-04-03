@@ -18,7 +18,7 @@ function getDevApiUrl(): string {
 
 const API_URL = __DEV__
   ? getDevApiUrl()
-  : "https://api.supermaker.app/api"; // TODO: update with production URL
+  : "https://sm.ozz.com.mx/api";
 
 const api = axios.create({
   baseURL: API_URL,
