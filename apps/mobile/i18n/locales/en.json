@@ -133,6 +133,7 @@
     "subscription": "Subscription",
     "freePlan": "Free Plan",
     "premiumPlan": "Premium Plan",
+    "familyPlan": "Family Plan",
     "upgradeToPremium": "Upgrade to Premium",
     "logout": "Logout",
     "logoutConfirm": "Are you sure you want to log out?"

@@ -2,10 +2,12 @@ import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../hooks/useThemeColors";
+import { useFamilyStore } from "../../store/familyStore";
 
 export default function TabsLayout() {
   const { t } = useTranslation();
   const colors = useThemeColors();
+  const myInvites = useFamilyStore((s) => s.myInvites);
 
   return (
     <Tabs
@@ -71,6 +73,8 @@ export default function TabsLayout() {
         name="family"
         options={{
           title: t("tabs.family"),
+          tabBarBadge: myInvites.length > 0 ? myInvites.length : undefined,
+          tabBarBadgeStyle: { backgroundColor: colors.primary, fontSize: 10 },
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "people" : "people-outline"}

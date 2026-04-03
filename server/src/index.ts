@@ -12,6 +12,7 @@ import analyticsRoutes from "./routes/analytics.routes.js";
 import familyRoutes from "./routes/family.routes.js";
 import wishlistRoutes from "./routes/wishlist.routes.js";
 import sseRoutes from "./routes/sse.routes.js";
+// family-freeze middleware is applied in family and wishlist routes
 
 const app = express();
 

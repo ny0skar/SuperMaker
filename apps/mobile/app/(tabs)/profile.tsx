@@ -301,36 +301,38 @@ export default function ProfileScreen() {
             styles.card,
             {
               backgroundColor:
-                user?.plan === "PREMIUM"
-                  ? colors.tertiaryContainer
-                  : colors.surfaceContainerLow,
+                user?.plan === "FREE"
+                  ? colors.surfaceContainerLow
+                  : colors.tertiaryContainer,
             },
           ]}
         >
           <View style={styles.cardHeader}>
             <Ionicons
-              name="diamond-outline"
+              name={user?.plan === "FAMILY" ? "people" : "diamond-outline"}
               size={20}
               color={
-                user?.plan === "PREMIUM"
-                  ? colors.onTertiaryContainer
-                  : colors.onSurfaceVariant
+                user?.plan === "FREE"
+                  ? colors.onSurfaceVariant
+                  : colors.onTertiaryContainer
               }
             />
             <ThemedText
               variant="title"
               color={
-                user?.plan === "PREMIUM"
-                  ? colors.onTertiaryContainer
-                  : colors.onSurface
+                user?.plan === "FREE"
+                  ? colors.onSurface
+                  : colors.onTertiaryContainer
               }
             >
-              {user?.plan === "PREMIUM"
-                ? t("profile.premiumPlan")
-                : t("profile.freePlan")}
+              {user?.plan === "FAMILY"
+                ? t("profile.familyPlan")
+                : user?.plan === "PREMIUM"
+                  ? t("profile.premiumPlan")
+                  : t("profile.freePlan")}
             </ThemedText>
           </View>
-          {user?.plan !== "PREMIUM" && (
+          {user?.plan === "FREE" && (
             <PrimaryButton
               title={t("profile.upgradeToPremium")}
               onPress={() => {

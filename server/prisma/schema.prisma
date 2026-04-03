@@ -133,6 +133,7 @@ model FamilyGroup {
   members   FamilyMember[]
   invites   FamilyInvite[]
   wishlist  WishlistItem[]
+  frozenAt  DateTime?
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
 
