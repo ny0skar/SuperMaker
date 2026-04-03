@@ -175,7 +175,28 @@
     "leaveGroupConfirm": "Are you sure you want to leave the family group? You will lose access to shared lists.",
     "leave": "Leave",
     "noFamily": "No family group",
-    "noFamilyDesc": "You don't belong to a family group yet. Ask a Family plan owner to invite you, or upgrade your plan to create one."
+    "noFamilyDesc": "You don't belong to a family group yet. Ask a Family plan owner to invite you, or upgrade your plan to create one.",
+    "wishlist": "Wishlist",
+    "wishlistDesc": "Add products your family needs from the store"
+  },
+  "wishlist": {
+    "title": "Wishlist",
+    "addProduct": "Request product",
+    "addProductDesc": "Add what you need and your family will see it when they go shopping.",
+    "productName": "Product name",
+    "productNamePlaceholder": "e.g. Milk, Avocados...",
+    "note": "Note",
+    "notePlaceholder": "e.g. Brand X",
+    "addToList": "Add to list",
+    "pending": "Pending",
+    "notAvailable": "Not available",
+    "noHay": "NOT FOUND",
+    "empty": "Empty list",
+    "emptyDesc": "Add products you need and your family will see them when they go shopping.",
+    "familyRequests": "FAMILY REQUESTS",
+    "enterPrice": "Enter the product price",
+    "addedToCart": "Added to cart",
+    "markedNoHay": "Marked as not available"
   },
   "expiring": {
     "noItems": "No items with expiration dates",

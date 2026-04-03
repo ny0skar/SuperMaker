@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../hooks/useThemeColors";
 import { useAuthStore } from "../../store/authStore";
@@ -313,6 +314,31 @@ export default function FamilyScreen() {
           </Text>
         </View>
 
+        {/* Wishlist Button */}
+        <TouchableOpacity
+          style={[
+            styles.wishlistBtn,
+            { backgroundColor: colors.primaryContainer },
+          ]}
+          onPress={() => router.push("/wishlist")}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="list" size={24} color={colors.onPrimaryContainer} />
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.wishlistBtnTitle, { color: colors.onPrimaryContainer }]}>
+              {t("family.wishlist")}
+            </Text>
+            <Text style={[styles.wishlistBtnDesc, { color: colors.onPrimaryContainer }]}>
+              {t("family.wishlistDesc")}
+            </Text>
+          </View>
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color={colors.onPrimaryContainer}
+          />
+        </TouchableOpacity>
+
         {/* Members */}
         <View
           style={[
@@ -539,6 +565,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
     borderRadius: radius.lg,
+  },
+  wishlistBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.lg,
+    padding: spacing.xl,
+    borderRadius: radius.xl,
+  },
+  wishlistBtnTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  wishlistBtnDesc: {
+    fontSize: 12,
+    opacity: 0.8,
+    marginTop: 2,
   },
   emptyState: {
     alignItems: "center",

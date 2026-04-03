@@ -15,6 +15,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useThemeColors } from "../../hooks/useThemeColors";
 import { useVisitStore } from "../../store/visitStore";
 import { useAuthStore } from "../../store/authStore";
+import { useFamilyStore } from "../../store/familyStore";
+import { useWishlistStore } from "../../store/wishlistStore";
 import { ThemedText } from "../../components/ThemedText";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { spacing, radius } from "../../theme";
@@ -34,8 +36,12 @@ export default function CartScreen() {
   const user = useAuthStore((s) => s.user);
   const { activeVisit, fetchActiveVisit, addItem, updateItem, deleteItem, finishVisit } =
     useVisitStore();
+  const { group } = useFamilyStore();
+  const { items: wishlistItems, fetchWishlist, markInCart, markNoHay } =
+    useWishlistStore();
 
   const [refreshing, setRefreshing] = useState(false);
+  const [wishlistPrices, setWishlistPrices] = useState<Record<string, string>>({});
   const [entryMode, setEntryMode] = useState<EntryMode>("quantity");
   const [itemName, setItemName] = useState("");
   const [price, setPrice] = useState("");
@@ -44,11 +50,13 @@ export default function CartScreen() {
 
   useEffect(() => {
     fetchActiveVisit();
+    if (group) fetchWishlist();
   }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchActiveVisit();
+    if (group) await fetchWishlist();
     setRefreshing(false);
   };
 
@@ -109,12 +117,51 @@ export default function CartScreen() {
     ]);
   };
 
+  const handleWishlistAddToCart = async (itemId: string) => {
+    const priceStr = wishlistPrices[itemId];
+    if (!priceStr || !parseFloat(priceStr)) {
+      Alert.alert("", t("wishlist.enterPrice"));
+      return;
+    }
+    if (!activeVisit) return;
+    try {
+      const wishItem = wishlistItems.find((i) => i.id === itemId);
+      // Add to visit cart
+      await addItem({
+        name: wishItem?.name || "",
+        pricePerUnit: parseFloat(priceStr),
+        quantity: parseFloat(wishItem?.quantity || "1"),
+        unit: (wishItem?.unit as any) || "PIECE",
+      });
+      // Mark as IN_CART in wishlist
+      await markInCart(itemId, activeVisit.id, parseFloat(priceStr));
+      setWishlistPrices((prev) => {
+        const next = { ...prev };
+        delete next[itemId];
+        return next;
+      });
+    } catch (err: any) {
+      Alert.alert("Error", err?.response?.data?.error || t("common.error"));
+    }
+  };
+
+  const handleWishlistNoHay = async (itemId: string) => {
+    try {
+      await markNoHay(itemId);
+    } catch (err: any) {
+      Alert.alert("Error", err?.response?.data?.error || t("common.error"));
+    }
+  };
+
   const handleFinishVisit = () => {
     Alert.alert(t("cart.finishVisit"), "", [
       { text: t("common.cancel"), style: "cancel" },
       {
         text: t("common.yes"),
-        onPress: () => finishVisit(),
+        onPress: async () => {
+          await finishVisit();
+          if (group) await fetchWishlist();
+        },
       },
     ]);
   };
@@ -170,6 +217,71 @@ export default function CartScreen() {
             </Text>
           </View>
         </View>
+
+        {/* Family Wishlist */}
+        {activeVisit && group && wishlistItems.filter((i) => i.status === "PENDING").length > 0 && (
+          <View
+            style={[
+              styles.wishlistSection,
+              { backgroundColor: colors.tertiaryContainer },
+            ]}
+          >
+            <View style={styles.wishlistHeader}>
+              <Ionicons name="people" size={18} color={colors.onTertiaryContainer} />
+              <ThemedText variant="label" color={colors.onTertiaryContainer}>
+                {t("wishlist.familyRequests")}
+              </ThemedText>
+            </View>
+            {wishlistItems
+              .filter((i) => i.status === "PENDING")
+              .map((item) => (
+                <View
+                  key={item.id}
+                  style={[
+                    styles.wishlistItem,
+                    { backgroundColor: colors.surfaceContainerLowest },
+                  ]}
+                >
+                  <View style={styles.wishlistItemInfo}>
+                    <Text style={[styles.wishlistItemName, { color: colors.onSurface }]}>
+                      {item.name} x{Math.round(parseFloat(item.quantity))}
+                    </Text>
+                    <Text style={[styles.wishlistItemBy, { color: colors.onSurfaceVariant }]}>
+                      {item.requestedBy?.displayName || item.requestedBy?.email}
+                      {item.note ? ` · ${item.note}` : ""}
+                    </Text>
+                  </View>
+                  <View style={styles.wishlistItemActions}>
+                    <View style={[styles.wishlistPriceInput, { backgroundColor: colors.surfaceContainerHighest }]}>
+                      <Text style={{ color: colors.onSurfaceVariant, fontSize: 12 }}>$</Text>
+                      <TextInput
+                        style={[styles.wishlistPriceText, { color: colors.onSurface }]}
+                        placeholder="0.00"
+                        placeholderTextColor={colors.outline}
+                        value={wishlistPrices[item.id] || ""}
+                        onChangeText={(v) =>
+                          setWishlistPrices((prev) => ({ ...prev, [item.id]: v }))
+                        }
+                        keyboardType="decimal-pad"
+                      />
+                    </View>
+                    <TouchableOpacity
+                      style={[styles.wishlistActionBtn, { backgroundColor: colors.primary }]}
+                      onPress={() => handleWishlistAddToCart(item.id)}
+                    >
+                      <Ionicons name="cart" size={16} color={colors.onPrimary} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.wishlistActionBtn, { backgroundColor: colors.errorContainer }]}
+                      onPress={() => handleWishlistNoHay(item.id)}
+                    >
+                      <Ionicons name="close" size={16} color={colors.error} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+          </View>
+        )}
 
         {/* Add New Item */}
         {activeVisit && (
@@ -646,5 +758,56 @@ const styles = StyleSheet.create({
   subtotalValue: {
     fontSize: 18,
     fontWeight: "700",
+  },
+  wishlistSection: {
+    padding: spacing.lg,
+    borderRadius: radius.xl,
+    gap: spacing.md,
+  },
+  wishlistHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  wishlistItem: {
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    gap: spacing.sm,
+  },
+  wishlistItemInfo: {
+    gap: 2,
+  },
+  wishlistItemName: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  wishlistItemBy: {
+    fontSize: 12,
+  },
+  wishlistItemActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  wishlistPriceInput: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.sm,
+    flex: 1,
+    gap: 2,
+  },
+  wishlistPriceText: {
+    flex: 1,
+    paddingVertical: 8,
+    fontSize: 14,
+  },
+  wishlistActionBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

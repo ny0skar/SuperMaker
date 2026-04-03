@@ -175,7 +175,28 @@
     "leaveGroupConfirm": "\u00bfSeguro que quieres salir del grupo familiar? Perder\u00e1s acceso a las listas compartidas.",
     "leave": "Salir",
     "noFamily": "Sin grupo familiar",
-    "noFamilyDesc": "A\u00fan no perteneces a un grupo familiar. Pide al due\u00f1o de un plan Familiar que te invite, o mejora tu plan para crear uno."
+    "noFamilyDesc": "A\u00fan no perteneces a un grupo familiar. Pide al due\u00f1o de un plan Familiar que te invite, o mejora tu plan para crear uno.",
+    "wishlist": "Lista de deseos",
+    "wishlistDesc": "Agrega productos que tu familia necesita del super"
+  },
+  "wishlist": {
+    "title": "Lista de deseos",
+    "addProduct": "Pedir producto",
+    "addProductDesc": "Agrega lo que necesitas y tu familia lo ver\u00e1 cuando vaya al super.",
+    "productName": "Nombre del producto",
+    "productNamePlaceholder": "ej. Leche, Aguacates...",
+    "note": "Nota",
+    "notePlaceholder": "ej. Marca Lala",
+    "addToList": "Agregar a la lista",
+    "pending": "Pendientes",
+    "notAvailable": "No disponibles",
+    "noHay": "NO HAY",
+    "empty": "Lista vac\u00eda",
+    "emptyDesc": "Agrega productos que necesites y tu familia los ver\u00e1 cuando vaya al super.",
+    "familyRequests": "PEDIDOS DE TU FAMILIA",
+    "enterPrice": "Ingresa el precio del producto",
+    "addedToCart": "Agregado al carrito",
+    "markedNoHay": "Marcado como no disponible"
   },
   "expiring": {
     "noItems": "Sin artículos con fecha de caducidad",
