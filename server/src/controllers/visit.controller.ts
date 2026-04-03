@@ -301,6 +301,12 @@ export async function finishVisit(
     include: { store: true, items: true },
   });
 
+  // Mark wishlist items that were IN_CART for this visit as BOUGHT
+  await prisma.wishlistItem.updateMany({
+    where: { visitId: visit.id, status: "IN_CART" },
+    data: { status: "BOUGHT" },
+  });
+
   // For free users, delete the visit data after finishing (ephemeral)
   if (req.effectivePlan === "FREE") {
     await prisma.visitItem.deleteMany({ where: { visitId: visit.id } });
