@@ -454,7 +454,7 @@ export default function DashboardScreen() {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const user = useAuthStore((s) => s.user);
-  const isPremium = user?.plan === "PREMIUM";
+  const isPremium = user?.plan === "PREMIUM" || user?.plan === "FAMILY";
 
   return (
     <SafeAreaView
