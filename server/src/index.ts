@@ -9,6 +9,7 @@ import authRoutes from "./routes/auth.routes.js";
 import storeRoutes from "./routes/store.routes.js";
 import visitRoutes from "./routes/visit.routes.js";
 import analyticsRoutes from "./routes/analytics.routes.js";
+import familyRoutes from "./routes/family.routes.js";
 
 const app = express();
 
@@ -96,6 +97,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/stores", storeRoutes);
 app.use("/api/visits", visitRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/family", familyRoutes);
 
 // 404 handler
 app.use((_req, res) => {
