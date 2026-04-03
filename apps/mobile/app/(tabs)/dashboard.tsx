@@ -355,7 +355,11 @@ function FreeDashboard() {
                   { color: colors.onSecondaryContainer },
                 ]}
               >
-                {activeVisit.items?.length ?? 0}{" "}
+                {activeVisit.items?.reduce(
+                  (sum: number, i: any) =>
+                    sum + Math.round(parseFloat(i.quantity)),
+                  0,
+                ) ?? 0}{" "}
                 {t("dashboard.items").toUpperCase()}
               </Text>
             </View>

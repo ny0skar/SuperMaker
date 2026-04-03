@@ -121,6 +121,10 @@ export default function CartScreen() {
 
   const items = activeVisit?.items ?? [];
   const total = activeVisit ? parseFloat(activeVisit.total) : 0;
+  const totalItemCount = items.reduce(
+    (sum, item) => sum + Math.round(parseFloat(item.quantity)),
+    0,
+  );
 
   return (
     <SafeAreaView
@@ -149,7 +153,7 @@ export default function CartScreen() {
               {t("cart.articles")} ({t("cart.itemsInCart")})
             </ThemedText>
             <Text style={[styles.statNumber, { color: colors.primary }]}>
-              {items.length}
+              {totalItemCount}
             </Text>
           </View>
           <View
@@ -464,7 +468,7 @@ export default function CartScreen() {
                   { color: colors.onSurfaceVariant },
                 ]}
               >
-                {t("cart.subtotal")} ({items.length} {t("dashboard.items")})
+                {t("cart.subtotal")} ({totalItemCount} {t("dashboard.items")})
               </Text>
               <Text
                 style={[

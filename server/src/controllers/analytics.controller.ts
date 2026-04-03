@@ -62,7 +62,7 @@ export async function getVisitHistory(
       where: { userId: req.userId, status: "FINISHED" },
       include: {
         store: { select: { name: true } },
-        items: { select: { id: true } },
+        items: { select: { id: true, quantity: true } },
       },
       orderBy: { finishedAt: "desc" },
       skip,
@@ -78,7 +78,7 @@ export async function getVisitHistory(
       id: v.id,
       storeName: v.store.name,
       total: Number(v.total),
-      itemCount: v.items.length,
+      itemCount: v.items.reduce((sum, i) => sum + Math.round(Number(i.quantity)), 0),
       finishedAt: v.finishedAt?.toISOString() ?? null,
     })),
     page,

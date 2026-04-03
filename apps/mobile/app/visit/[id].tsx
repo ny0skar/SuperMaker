@@ -147,7 +147,11 @@ export default function VisitDetailScreen() {
             color={colors.onSecondaryContainer}
             style={{ opacity: 0.7 }}
           >
-            {visit.items.length} {t("dashboard.items")}
+            {visit.items.reduce(
+              (sum: number, i: any) =>
+                sum + Math.round(parseFloat(i.quantity)),
+              0,
+            )} {t("dashboard.items")}
           </ThemedText>
         </View>
 
