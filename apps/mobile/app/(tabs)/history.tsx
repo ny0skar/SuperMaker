@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import {
   View,
   FlatList,
+  ScrollView,
   StyleSheet,
   RefreshControl,
   ActivityIndicator,
@@ -36,7 +37,7 @@ export default function HistoryScreen() {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const user = useAuthStore((s) => s.user);
-  const isPremium = user?.plan === "PREMIUM";
+  const hasPaidPlan = user?.plan === "PREMIUM" || user?.plan === "FAMILY";
 
   const [visits, setVisits] = useState<VisitHistoryItem[]>([]);
   const [page, setPage] = useState(1);
@@ -64,9 +65,9 @@ export default function HistoryScreen() {
   );
 
   useEffect(() => {
-    if (!isPremium) return;
+    if (!hasPaidPlan) return;
     fetchHistory(1).finally(() => setLoading(false));
-  }, [isPremium, fetchHistory]);
+  }, [hasPaidPlan, fetchHistory]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -82,22 +83,74 @@ export default function HistoryScreen() {
   };
 
   // Free user view
-  if (!isPremium) {
+  if (!hasPaidPlan) {
     return (
       <SafeAreaView
         style={[styles.safe, { backgroundColor: colors.surface }]}
         edges={["top"]}
       >
-        <View style={styles.header}>
-          <ThemedText variant="headline">{t("history.title")}</ThemedText>
-        </View>
-        <View style={styles.upgradeCentered}>
-          <UpgradeCard
-            onUpgrade={() => {
-              // TODO: Navigate to premium upgrade
-            }}
-          />
-        </View>
+        <ScrollView contentContainerStyle={styles.freeContent}>
+          <View style={styles.header}>
+            <ThemedText variant="headline">{t("history.title")}</ThemedText>
+          </View>
+
+          <ThemedText
+            variant="caption"
+            color={colors.onSurfaceVariant}
+            style={{ paddingHorizontal: spacing.xl, marginBottom: spacing.md }}
+          >
+            {t("history.comingSoon")}
+          </ThemedText>
+
+          {/* Premium Card */}
+          <TouchableOpacity
+            style={[styles.upgradeCard, { backgroundColor: colors.tertiaryContainer }]}
+            onPress={() => router.push("/upgrade")}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="diamond" size={28} color={colors.onTertiaryContainer} />
+            <View style={styles.upgradeCardInfo}>
+              <ThemedText variant="title" color={colors.onTertiaryContainer}>
+                Plan Premium
+              </ThemedText>
+              <ThemedText variant="caption" color={colors.onTertiaryContainer} style={{ opacity: 0.85 }}>
+                {t("upgrade.premiumShort")}
+              </ThemedText>
+              <ThemedText variant="label" color={colors.onTertiaryContainer} style={{ marginTop: spacing.sm }}>
+                $49/mes · $449/año
+              </ThemedText>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.onTertiaryContainer} />
+          </TouchableOpacity>
+
+          {/* Family Card */}
+          <TouchableOpacity
+            style={[styles.upgradeCard, { backgroundColor: colors.primaryContainer }]}
+            onPress={() => router.push("/upgrade")}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="people" size={28} color={colors.onPrimaryContainer} />
+            <View style={styles.upgradeCardInfo}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.sm }}>
+                <ThemedText variant="title" color={colors.onPrimaryContainer}>
+                  Plan Familiar
+                </ThemedText>
+                <View style={[styles.recBadge, { backgroundColor: colors.primary }]}>
+                  <ThemedText variant="label" color={colors.onPrimary} style={{ fontSize: 9 }}>
+                    {t("upgrade.recommended")}
+                  </ThemedText>
+                </View>
+              </View>
+              <ThemedText variant="caption" color={colors.onPrimaryContainer} style={{ opacity: 0.85 }}>
+                {t("upgrade.familyShort")}
+              </ThemedText>
+              <ThemedText variant="label" color={colors.onPrimaryContainer} style={{ marginTop: spacing.sm }}>
+                $79/mes · $699/año
+              </ThemedText>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.onPrimaryContainer} />
+          </TouchableOpacity>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -215,11 +268,26 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
     paddingBottom: spacing.md,
   },
-  upgradeCentered: {
-    flex: 1,
-    justifyContent: "center",
+  freeContent: {
+    paddingBottom: 100,
+    gap: spacing.lg,
+  },
+  upgradeCard: {
+    flexDirection: "row",
     alignItems: "center",
+    gap: spacing.lg,
     padding: spacing.xl,
+    marginHorizontal: spacing.xl,
+    borderRadius: radius.xl,
+  },
+  upgradeCardInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  recBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
   },
   listContent: {
     padding: spacing.xl,

@@ -12,6 +12,7 @@
     "yes": "Yes",
     "no": "No",
     "ok": "OK",
+    "back": "Back",
     "currency": "$"
   },
   "auth": {

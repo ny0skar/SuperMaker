@@ -66,14 +66,23 @@ export function useBiometrics() {
   /** Save refresh token protected by biometrics */
   const enableBiometrics = async (refreshToken: string): Promise<boolean> => {
     try {
-      await SecureStore.setItemAsync(BIOMETRIC_TOKEN_KEY, refreshToken, {
-        requireAuthentication: true,
-        authenticationPrompt: "Confirma tu identidad para activar acceso biométrico",
-      });
+      // First try storing without biometric protection (works in Expo Go)
+      // In production builds, requireAuthentication will work properly
+      const options = __DEV__
+        ? {}
+        : {
+            requireAuthentication: true,
+            authenticationPrompt: "Confirma tu identidad para activar acceso biométrico",
+          };
+      await SecureStore.setItemAsync(BIOMETRIC_TOKEN_KEY, refreshToken, options);
       await SecureStore.setItemAsync(BIOMETRIC_ENABLED_KEY, "true");
       setIsEnabled(true);
       return true;
     } catch {
+      // Clean up any partial state
+      await SecureStore.deleteItemAsync(BIOMETRIC_TOKEN_KEY).catch(() => {});
+      await SecureStore.deleteItemAsync(BIOMETRIC_ENABLED_KEY).catch(() => {});
+      setIsEnabled(false);
       return false;
     }
   };
@@ -101,10 +110,13 @@ export function useBiometrics() {
 
         if (!result.success) return null;
 
-        const token = await SecureStore.getItemAsync(BIOMETRIC_TOKEN_KEY, {
-          requireAuthentication: true,
-          authenticationPrompt: "Confirma tu identidad",
-        });
+        const options = __DEV__
+          ? {}
+          : {
+              requireAuthentication: true,
+              authenticationPrompt: "Confirma tu identidad",
+            };
+        const token = await SecureStore.getItemAsync(BIOMETRIC_TOKEN_KEY, options);
 
         return token;
       } catch {

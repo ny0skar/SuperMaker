@@ -68,6 +68,7 @@ export default function UpgradeScreen() {
             headerStyle: { backgroundColor: colors.surface },
             headerTintColor: colors.onSurface,
             headerShadowVisible: false,
+            headerBackTitle: t("common.back"),
           }}
         />
         <SafeAreaView style={[styles.safe, { backgroundColor: colors.surface }]} edges={[]}>

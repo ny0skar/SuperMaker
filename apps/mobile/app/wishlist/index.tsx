@@ -85,6 +85,7 @@ export default function WishlistScreen() {
           headerStyle: { backgroundColor: colors.surface },
           headerTintColor: colors.onSurface,
           headerShadowVisible: false,
+          headerBackTitle: t("common.back"),
         }}
       />
       <SafeAreaView
