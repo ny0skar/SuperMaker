@@ -12,6 +12,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
 import { useThemeColors } from "../../hooks/useThemeColors";
 import { useVisitStore } from "../../store/visitStore";
 import { useAuthStore } from "../../store/authStore";
@@ -154,6 +155,9 @@ export default function CartScreen() {
   };
 
   const handleFinishVisit = () => {
+    const visitId = activeVisit?.id;
+    const isPaid = user?.plan === "PREMIUM" || user?.plan === "FAMILY";
+
     Alert.alert(t("cart.finishVisit"), "", [
       { text: t("common.cancel"), style: "cancel" },
       {
@@ -161,6 +165,21 @@ export default function CartScreen() {
         onPress: async () => {
           await finishVisit();
           if (group) await fetchWishlist();
+
+          // Offer ticket scanning for paid users
+          if (isPaid && visitId) {
+            Alert.alert(
+              t("ticket.scanPromptTitle"),
+              t("ticket.scanPromptDesc"),
+              [
+                { text: t("ticket.later"), style: "cancel" },
+                {
+                  text: t("ticket.scanNow"),
+                  onPress: () => router.push(`/visit/scan/${visitId}`),
+                },
+              ],
+            );
+          }
         },
       },
     ]);

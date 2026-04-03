@@ -12,6 +12,7 @@ import analyticsRoutes from "./routes/analytics.routes.js";
 import familyRoutes from "./routes/family.routes.js";
 import wishlistRoutes from "./routes/wishlist.routes.js";
 import sseRoutes from "./routes/sse.routes.js";
+import ticketRoutes from "./routes/ticket.routes.js";
 // family-freeze middleware is applied in family and wishlist routes
 
 const app = express();
@@ -48,6 +49,9 @@ app.use(
 );
 
 app.use(express.json({ limit: "100kb" }));
+
+// Higher limit for ticket scanning (base64 images)
+app.use("/api/visits/:id/scan-ticket", express.json({ limit: "10mb" }));
 
 // Rate limiting — general: 100 req/min
 const limiter = rateLimit({
@@ -103,6 +107,7 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/family", familyRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/sse", sseRoutes);
+app.use("/api/visits", ticketRoutes);
 
 // 404 handler
 app.use((_req, res) => {

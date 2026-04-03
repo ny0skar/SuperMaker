@@ -120,6 +120,8 @@ model VisitItem {
   subtotal     Decimal   @db.Decimal(10, 2)
   expiresAt    DateTime?
   barcode      String?
+  category     String?
+  ticketPrice  Decimal?  @db.Decimal(10, 2)
   createdAt    DateTime  @default(now())
 
   @@map("visit_items")

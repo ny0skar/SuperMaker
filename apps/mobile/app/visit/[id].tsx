@@ -155,6 +155,19 @@ export default function VisitDetailScreen() {
           </ThemedText>
         </View>
 
+        {/* Scan Ticket Button */}
+        <TouchableOpacity
+          style={[styles.scanBtn, { backgroundColor: colors.primaryContainer }]}
+          onPress={() => router.push(`/visit/scan/${id}`)}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="camera-outline" size={22} color={colors.onPrimaryContainer} />
+          <Text style={[styles.scanBtnText, { color: colors.onPrimaryContainer }]}>
+            {t("ticket.scanTicket")}
+          </Text>
+          <Ionicons name="chevron-forward" size={18} color={colors.onPrimaryContainer} />
+        </TouchableOpacity>
+
         {/* Items List */}
         <ThemedText
           variant="label"
@@ -221,6 +234,18 @@ export default function VisitDetailScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
+  },
+  scanBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    padding: spacing.lg,
+    borderRadius: radius.lg,
+  },
+  scanBtnText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "700",
   },
   loading: {
     flex: 1,

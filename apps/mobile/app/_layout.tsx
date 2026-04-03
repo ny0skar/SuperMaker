@@ -41,6 +41,7 @@ export default function RootLayout() {
         <Stack.Screen name="visit/[id]" />
         <Stack.Screen name="wishlist/index" />
         <Stack.Screen name="upgrade/index" />
+        <Stack.Screen name="visit/scan/[id]" />
       </Stack>
     </>
   );

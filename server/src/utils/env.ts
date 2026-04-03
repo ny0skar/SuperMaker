@@ -13,6 +13,7 @@ export const env = {
   JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || "7d",
   PORT: parseInt(process.env.PORT || "4000", 10),
   NODE_ENV: process.env.NODE_ENV || "development",
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY || "",
 } as const;
 
 const required = ["DATABASE_URL", "JWT_SECRET", "JWT_REFRESH_SECRET"] as const;
