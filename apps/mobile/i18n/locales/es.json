@@ -262,7 +262,10 @@
     "scanPromptTitle": "¿Escanear ticket?",
     "scanPromptDesc": "Toma foto de tu ticket para comparar precios y categorizar tus compras.",
     "scanNow": "Escanear ahora",
-    "later": "Después"
+    "later": "Después",
+    "manualMatch": "Asociar manualmente",
+    "manualMatchDesc": "Selecciona el producto del ticket que corresponde:",
+    "tapToMatch": "Toca para asociar con el ticket"
   },
   "expiring": {
     "noItems": "Sin artículos con fecha de caducidad",

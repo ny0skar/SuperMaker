@@ -24,6 +24,8 @@ interface VisitItem {
   unit: string;
   subtotal: string;
   expiresAt: string | null;
+  category: string | null;
+  ticketPrice: string | null;
 }
 
 interface VisitDetail {
@@ -206,6 +208,13 @@ export default function VisitDetailScreen() {
                       ? `${(qty * 1000).toFixed(0)}g x $${formatMoney(price)}${t("cart.perKg")}`
                       : `${qty} ${qty === 1 ? t("cart.unit") : t("cart.units")} x $${formatMoney(price)}${t("cart.perUnit")}`}
                   </Text>
+                  {item.category && (
+                    <View style={[styles.categoryTag, { backgroundColor: colors.surfaceContainerHigh }]}>
+                      <Text style={{ fontSize: 11, fontWeight: "600", color: colors.onSurface }}>
+                        {item.category}
+                      </Text>
+                    </View>
+                  )}
                   {item.expiresAt && (
                     <View style={styles.expiryRow}>
                       <Ionicons
@@ -219,9 +228,16 @@ export default function VisitDetailScreen() {
                     </View>
                   )}
                 </View>
-                <Text style={[styles.itemSubtotal, { color: colors.onSurface }]}>
-                  ${formatMoney(sub)}
-                </Text>
+                <View style={{ alignItems: "flex-end", gap: 2 }}>
+                  <Text style={[styles.itemSubtotal, { color: colors.onSurface }]}>
+                    ${formatMoney(sub)}
+                  </Text>
+                  {item.ticketPrice && parseFloat(item.ticketPrice) !== sub && (
+                    <Text style={{ fontSize: 11, color: colors.error, fontWeight: "600" }}>
+                      Ticket: ${formatMoney(parseFloat(item.ticketPrice))}
+                    </Text>
+                  )}
+                </View>
               </View>
             );
           })}
@@ -234,6 +250,13 @@ export default function VisitDetailScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
+  },
+  categoryTag: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginTop: 4,
   },
   scanBtn: {
     flexDirection: "row",

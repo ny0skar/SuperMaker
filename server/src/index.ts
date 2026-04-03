@@ -48,10 +48,10 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: "100kb" }));
-
-// Higher limit for ticket scanning (base64 images)
+// Higher limit for ticket scanning (base64 images) — must be before general limit
 app.use("/api/visits/:id/scan-ticket", express.json({ limit: "10mb" }));
+
+app.use(express.json({ limit: "100kb" }));
 
 // Rate limiting — general: 100 req/min
 const limiter = rateLimit({

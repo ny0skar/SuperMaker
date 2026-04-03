@@ -262,7 +262,10 @@
     "scanPromptTitle": "Scan ticket?",
     "scanPromptDesc": "Take a photo of your receipt to compare prices and categorize your purchases.",
     "scanNow": "Scan now",
-    "later": "Later"
+    "later": "Later",
+    "manualMatch": "Match manually",
+    "manualMatchDesc": "Select the ticket product that corresponds:",
+    "tapToMatch": "Tap to match with ticket"
   },
   "expiring": {
     "noItems": "No items with expiration dates",

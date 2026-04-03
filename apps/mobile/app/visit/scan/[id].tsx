@@ -254,7 +254,7 @@ export default function ScanTicketScreen() {
               {/* Item by item */}
               <View style={{ gap: spacing.sm }}>
                 {result.reconciliation.map((r, i) => {
-                  const hasDiff = r.priceDiff && Math.abs(r.priceDiff) > 0.5;
+                  const hasDiff = r.priceDiff != null && Math.abs(r.priceDiff) > 0.5;
                   return (
                     <View
                       key={i}
@@ -276,16 +276,81 @@ export default function ScanTicketScreen() {
                             {t("ticket.youEntered")}: ${formatMoney(r.visitItem.userPrice)}
                           </Text>
                           {r.ticketItem && (
-                            <Text
-                              style={[
-                                styles.priceLabel,
-                                { color: hasDiff ? colors.error : colors.primary, fontWeight: "700" },
-                              ]}
-                            >
-                              {t("ticket.ticketSays")}: ${formatMoney(r.ticketItem.total)}
-                            </Text>
+                            <View style={styles.matchedRow}>
+                              <Text
+                                style={[
+                                  styles.priceLabel,
+                                  { color: hasDiff ? colors.error : colors.primary, fontWeight: "700", flex: 1 },
+                                ]}
+                              >
+                                {t("ticket.ticketSays")}: ${formatMoney(r.ticketItem.total)} ({r.ticketItem.name})
+                              </Text>
+                              <TouchableOpacity
+                                onPress={() => {
+                                  setResult((prev) => {
+                                    if (!prev) return prev;
+                                    const item = prev.reconciliation[i];
+                                    if (!item.ticketItem) return prev;
+                                    const newRecon = [...prev.reconciliation];
+                                    const restored = item.ticketItem;
+                                    newRecon[i] = {
+                                      ...newRecon[i],
+                                      ticketItem: null,
+                                      priceDiff: null,
+                                      suggestedCategory: null,
+                                    };
+                                    return {
+                                      ...prev,
+                                      reconciliation: newRecon,
+                                      unmatched: [...prev.unmatched, restored],
+                                    };
+                                  });
+                                }}
+                              >
+                                <Ionicons name="close-circle" size={20} color={colors.error} />
+                              </TouchableOpacity>
+                            </View>
                           )}
-                          {!r.ticketItem && (
+                          {!r.ticketItem && result.unmatched.length > 0 && (
+                            <TouchableOpacity
+                              onPress={() => {
+                                // Show picker to manually match
+                                const options = result.unmatched.map(
+                                  (u) => `${u.name} — $${formatMoney(u.total)}`,
+                                );
+                                Alert.alert(
+                                  t("ticket.manualMatch"),
+                                  t("ticket.manualMatchDesc"),
+                                  [
+                                    ...result.unmatched.map((u, ui) => ({
+                                      text: `${u.name} — $${formatMoney(u.total)}`,
+                                      onPress: () => {
+                                        // Apply manual match
+                                        setResult((prev) => {
+                                          if (!prev) return prev;
+                                          const newRecon = [...prev.reconciliation];
+                                          newRecon[i] = {
+                                            ...newRecon[i],
+                                            ticketItem: u,
+                                            priceDiff: u.total - r.visitItem.userPrice,
+                                            suggestedCategory: u.category,
+                                          };
+                                          const newUnmatched = prev.unmatched.filter((_, k) => k !== ui);
+                                          return { ...prev, reconciliation: newRecon, unmatched: newUnmatched };
+                                        });
+                                      },
+                                    })),
+                                    { text: t("common.cancel"), style: "cancel" },
+                                  ],
+                                );
+                              }}
+                            >
+                              <Text style={[styles.priceLabel, { color: colors.primary, fontWeight: "700" }]}>
+                                {t("ticket.tapToMatch")}
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                          {!r.ticketItem && result.unmatched.length === 0 && (
                             <Text style={[styles.priceLabel, { color: colors.outline }]}>
                               {t("ticket.noMatch")}
                             </Text>
@@ -474,6 +539,11 @@ const styles = StyleSheet.create({
   },
   priceCompare: {
     gap: 2,
+  },
+  matchedRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   priceLabel: {
     fontSize: 13,
