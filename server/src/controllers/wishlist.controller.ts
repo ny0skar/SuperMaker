@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "../utils/prisma.js";
 import { AuthRequest } from "../middleware/auth.js";
 import type { ApiResponse } from "@supermaker/shared";
+import { broadcast } from "../services/familyBroadcast.js";
 
 const addItemSchema = z.object({
   name: z.string().min(1, "Product name is required").max(200),
@@ -50,6 +51,8 @@ export async function addWishlistItem(
     },
     include: { requestedBy: { select: userSelect } },
   });
+
+  broadcast(req.familyGroupId, "wishlist:added", item, req.userId);
 
   res.status(201).json({ success: true, data: item } satisfies ApiResponse);
 }
@@ -157,8 +160,12 @@ export async function updateWishlistItemStatus(
     },
   });
 
+  broadcast(req.familyGroupId!, "wishlist:updated", updated, req.userId);
+
   res.json({ success: true, data: updated } satisfies ApiResponse);
 }
+
+
 
 /** Delete a wishlist item (requester or group owner) */
 export async function deleteWishlistItem(
@@ -199,6 +206,8 @@ export async function deleteWishlistItem(
   }
 
   await prisma.wishlistItem.delete({ where: { id: item.id } });
+
+  broadcast(req.familyGroupId!, "wishlist:deleted", { id: item.id }, req.userId);
 
   res.json({ success: true } satisfies ApiResponse);
 }

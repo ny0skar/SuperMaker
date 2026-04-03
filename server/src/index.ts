@@ -11,6 +11,7 @@ import visitRoutes from "./routes/visit.routes.js";
 import analyticsRoutes from "./routes/analytics.routes.js";
 import familyRoutes from "./routes/family.routes.js";
 import wishlistRoutes from "./routes/wishlist.routes.js";
+import sseRoutes from "./routes/sse.routes.js";
 
 const app = express();
 
@@ -100,6 +101,7 @@ app.use("/api/visits", visitRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/family", familyRoutes);
 app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/sse", sseRoutes);
 
 // 404 handler
 app.use((_req, res) => {

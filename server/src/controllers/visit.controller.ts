@@ -4,6 +4,7 @@ import { prisma } from "../utils/prisma.js";
 import { AuthRequest } from "../middleware/auth.js";
 import { FREE_MAX_ITEMS_PER_VISIT } from "@supermaker/shared";
 import type { Visit, VisitItem, ApiResponse } from "@supermaker/shared";
+import { broadcast } from "../services/familyBroadcast.js";
 
 const createVisitSchema = z.object({
   storeId: z.string().uuid("Invalid store ID"),
@@ -306,6 +307,15 @@ export async function finishVisit(
     where: { visitId: visit.id, status: "IN_CART" },
     data: { status: "BOUGHT" },
   });
+
+  // Notify family that visit finished
+  if (req.familyGroupId) {
+    broadcast(req.familyGroupId, "visit:finished", {
+      visitId: visit.id,
+      storeName: updated.store?.name,
+      total: Number(updated.total),
+    }, req.userId);
+  }
 
   // For free users, delete the visit data after finishing (ephemeral)
   if (req.effectivePlan === "FREE") {
