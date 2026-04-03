@@ -1,5 +1,7 @@
 export const FREE_MAX_STORES = 1;
 export const FREE_MAX_ITEMS_PER_VISIT = 15;
+export const FAMILY_MAX_MEMBERS = 5;
+export const FAMILY_INVITE_EXPIRY_DAYS = 7;
 export const PASSWORD_MIN_LENGTH = 8;
 export const CURRENCY = "MXN";
 export const CURRENCY_SYMBOL = "$";

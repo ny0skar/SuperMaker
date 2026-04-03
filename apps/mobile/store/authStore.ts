@@ -8,7 +8,7 @@ interface UserPublic {
   displayName: string | null;
   avatarUrl: string | null;
   locale: string;
-  plan: "FREE" | "PREMIUM";
+  plan: "FREE" | "PREMIUM" | "FAMILY";
   planExpiresAt: string | null;
   createdAt: string;
 }

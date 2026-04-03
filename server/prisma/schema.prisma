@@ -10,6 +10,7 @@ datasource db {
 enum Plan {
   FREE
   PREMIUM
+  FAMILY
 }
 
 enum VisitStatus {
@@ -25,20 +26,43 @@ enum Unit {
   ML
 }
 
+enum FamilyRole {
+  OWNER
+  MEMBER
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+enum WishlistItemStatus {
+  PENDING
+  IN_CART
+  NO_HAY
+  BOUGHT
+}
+
 model User {
-  id             String         @id @default(uuid())
-  email          String         @unique
-  passwordHash   String
-  displayName    String?
-  avatarUrl      String?
-  locale         String         @default("es")
-  plan           Plan           @default(FREE)
-  planExpiresAt  DateTime?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  stores         Store[]
-  visits         Visit[]
-  refreshTokens  RefreshToken[]
+  id                 String         @id @default(uuid())
+  email              String         @unique
+  passwordHash       String
+  displayName        String?
+  avatarUrl          String?
+  locale             String         @default("es")
+  plan               Plan           @default(FREE)
+  planExpiresAt      DateTime?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  stores             Store[]
+  visits             Visit[]
+  refreshTokens      RefreshToken[]
+  ownedFamilyGroups  FamilyGroup[]  @relation("FamilyOwner")
+  familyMemberships  FamilyMember[]
+  wishlistRequests   WishlistItem[] @relation("WishlistRequester")
+  wishlistHandled    WishlistItem[] @relation("WishlistHandler")
 
   @@map("users")
 }
@@ -69,17 +93,18 @@ model Store {
 }
 
 model Visit {
-  id         String      @id @default(uuid())
-  userId     String
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  storeId    String
-  store      Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  status     VisitStatus @default(ACTIVE)
-  total      Decimal     @default(0) @db.Decimal(10, 2)
-  ticketUrl  String?
-  createdAt  DateTime    @default(now())
-  finishedAt DateTime?
-  items      VisitItem[]
+  id            String         @id @default(uuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storeId       String
+  store         Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  status        VisitStatus    @default(ACTIVE)
+  total         Decimal        @default(0) @db.Decimal(10, 2)
+  ticketUrl     String?
+  createdAt     DateTime       @default(now())
+  finishedAt    DateTime?
+  items         VisitItem[]
+  wishlistItems WishlistItem[]
 
   @@map("visits")
 }
@@ -98,4 +123,67 @@ model VisitItem {
   createdAt    DateTime  @default(now())
 
   @@map("visit_items")
+}
+
+model FamilyGroup {
+  id        String         @id @default(uuid())
+  name      String
+  ownerId   String
+  owner     User           @relation("FamilyOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members   FamilyMember[]
+  invites   FamilyInvite[]
+  wishlist  WishlistItem[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@map("family_groups")
+}
+
+model FamilyMember {
+  id       String      @id @default(uuid())
+  groupId  String
+  group    FamilyGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     FamilyRole  @default(MEMBER)
+  joinedAt DateTime    @default(now())
+
+  @@unique([groupId, userId])
+  @@map("family_members")
+}
+
+model FamilyInvite {
+  id        String       @id @default(uuid())
+  groupId   String
+  group     FamilyGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  email     String
+  status    InviteStatus @default(PENDING)
+  invitedBy String
+  createdAt DateTime     @default(now())
+  expiresAt DateTime
+
+  @@index([email])
+  @@map("family_invites")
+}
+
+model WishlistItem {
+  id            String             @id @default(uuid())
+  groupId       String
+  group         FamilyGroup        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  name          String
+  quantity      Decimal            @default(1) @db.Decimal(10, 3)
+  unit          Unit               @default(PIECE)
+  note          String?
+  status        WishlistItemStatus @default(PENDING)
+  requestedById String
+  requestedBy   User               @relation("WishlistRequester", fields: [requestedById], references: [id])
+  handledById   String?
+  handledBy     User?              @relation("WishlistHandler", fields: [handledById], references: [id])
+  visitId       String?
+  visit         Visit?             @relation(fields: [visitId], references: [id])
+  price         Decimal?           @db.Decimal(10, 2)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@map("wishlist_items")
 }

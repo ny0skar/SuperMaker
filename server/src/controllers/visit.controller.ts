@@ -88,7 +88,7 @@ export async function getVisits(
   req: AuthRequest,
   res: Response,
 ): Promise<void> {
-  if (req.userPlan === "FREE") {
+  if (req.effectivePlan === "FREE") {
     // Free users only see active visits (no history)
     const visits = await prisma.visit.findMany({
       where: { userId: req.userId, status: "ACTIVE" },
@@ -134,7 +134,7 @@ export async function addItem(
     return;
   }
 
-  if (req.userPlan === "FREE" && visit.items.length >= FREE_MAX_ITEMS_PER_VISIT) {
+  if (req.effectivePlan === "FREE" && visit.items.length >= FREE_MAX_ITEMS_PER_VISIT) {
     res.status(403).json({
       success: false,
       error: `Free plan allows maximum ${FREE_MAX_ITEMS_PER_VISIT} items per visit. Upgrade to Premium for unlimited items.`,
@@ -302,7 +302,7 @@ export async function finishVisit(
   });
 
   // For free users, delete the visit data after finishing (ephemeral)
-  if (req.userPlan === "FREE") {
+  if (req.effectivePlan === "FREE") {
     await prisma.visitItem.deleteMany({ where: { visitId: visit.id } });
     await prisma.visit.delete({ where: { id: visit.id } });
   }

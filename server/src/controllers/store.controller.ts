@@ -22,7 +22,7 @@ export async function createStore(
     return;
   }
 
-  if (req.userPlan === "FREE") {
+  if (req.effectivePlan === "FREE") {
     const count = await prisma.store.count({
       where: { userId: req.userId },
     });

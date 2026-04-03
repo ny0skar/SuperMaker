@@ -1,6 +1,9 @@
-export type Plan = "FREE" | "PREMIUM";
+export type Plan = "FREE" | "PREMIUM" | "FAMILY";
 export type VisitStatus = "ACTIVE" | "FINISHED";
 export type Unit = "PIECE" | "KG" | "G" | "L" | "ML";
+export type FamilyRole = "OWNER" | "MEMBER";
+export type InviteStatus = "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED";
+export type WishlistItemStatus = "PENDING" | "IN_CART" | "NO_HAY" | "BOUGHT";
 
 export interface UserPublic {
   id: string;
@@ -98,4 +101,78 @@ export interface RegisterInput {
 export interface LoginInput {
   email: string;
   password: string;
+}
+
+// Family types
+
+export interface FamilyGroup {
+  id: string;
+  name: string;
+  ownerId: string;
+  owner?: UserPublic;
+  members?: FamilyMemberPublic[];
+  createdAt: string;
+}
+
+export interface FamilyMemberPublic {
+  id: string;
+  groupId: string;
+  userId: string;
+  role: FamilyRole;
+  joinedAt: string;
+  user?: UserPublic;
+}
+
+export interface FamilyInvitePublic {
+  id: string;
+  groupId: string;
+  email: string;
+  status: InviteStatus;
+  invitedBy: string;
+  createdAt: string;
+  expiresAt: string;
+  group?: { name: string };
+}
+
+export interface WishlistItemPublic {
+  id: string;
+  groupId: string;
+  name: string;
+  quantity: string;
+  unit: Unit;
+  note: string | null;
+  status: WishlistItemStatus;
+  requestedById: string;
+  requestedBy?: UserPublic;
+  handledById: string | null;
+  handledBy?: UserPublic;
+  visitId: string | null;
+  price: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateFamilyInput {
+  name: string;
+}
+
+export interface InviteMemberInput {
+  email: string;
+}
+
+export interface RespondInviteInput {
+  accept: boolean;
+}
+
+export interface AddWishlistItemInput {
+  name: string;
+  quantity?: number;
+  unit?: Unit;
+  note?: string;
+}
+
+export interface UpdateWishlistStatusInput {
+  status: "IN_CART" | "NO_HAY";
+  visitId?: string;
+  price?: number;
 }

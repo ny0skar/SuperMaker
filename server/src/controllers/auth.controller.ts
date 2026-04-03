@@ -32,7 +32,7 @@ function toUserPublic(user: {
   displayName: string | null;
   avatarUrl: string | null;
   locale: string;
-  plan: "FREE" | "PREMIUM";
+  plan: "FREE" | "PREMIUM" | "FAMILY";
   planExpiresAt: Date | null;
   createdAt: Date;
 }): UserPublic {
