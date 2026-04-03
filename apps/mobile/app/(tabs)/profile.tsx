@@ -217,25 +217,11 @@ export default function ProfileScreen() {
           </View>
           <View style={{ gap: spacing.lg }}>
             {biometricAvailable && (
-              <TouchableOpacity
+              <View
                 style={[
                   styles.biometricRow,
                   { backgroundColor: colors.surfaceContainerHighest },
                 ]}
-                onPress={async () => {
-                  if (biometricEnabled) {
-                    await disableBiometrics();
-                  } else {
-                    const token = await SecureStore.getItemAsync("refreshToken");
-                    if (token) {
-                      const ok = await enableBiometrics(token);
-                      if (!ok) {
-                        Alert.alert("Error", "No se pudo activar la autenticación biométrica.");
-                      }
-                    }
-                  }
-                }}
-                activeOpacity={0.7}
               >
                 <View style={styles.biometricInfo}>
                   <Ionicons
@@ -248,7 +234,9 @@ export default function ProfileScreen() {
                       {getBiometricLabel()}
                     </Text>
                     <Text style={[styles.biometricHint, { color: colors.onSurfaceVariant }]}>
-                      Acceso rápido sin contraseña
+                      {biometricEnabled
+                        ? t("profile.biometricOn")
+                        : t("profile.biometricOff")}
                     </Text>
                   </View>
                 </View>
@@ -259,12 +247,17 @@ export default function ProfileScreen() {
                       await disableBiometrics();
                     } else {
                       const token = await SecureStore.getItemAsync("refreshToken");
-                      if (token) await enableBiometrics(token);
+                      if (token) {
+                        const ok = await enableBiometrics(token);
+                        if (!ok) {
+                          Alert.alert("Error", t("profile.biometricError"));
+                        }
+                      }
                     }
                   }}
                   trackColor={{ true: colors.primary }}
                 />
-              </TouchableOpacity>
+              </View>
             )}
 
             <ThemedInput
@@ -332,12 +325,12 @@ export default function ProfileScreen() {
                   : t("profile.freePlan")}
             </ThemedText>
           </View>
-          {user?.plan === "FREE" && (
+          {user?.plan !== "FAMILY" && (
             <PrimaryButton
-              title={t("profile.upgradeToPremium")}
-              onPress={() => {
-                // TODO: Navigate to premium upgrade
-              }}
+              title={user?.plan === "FREE"
+                ? t("profile.upgradeToPremium")
+                : t("profile.upgradeToFamily")}
+              onPress={() => router.push("/upgrade")}
             />
           )}
         </View>

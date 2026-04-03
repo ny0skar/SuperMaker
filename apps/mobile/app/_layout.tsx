@@ -40,6 +40,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="visit/[id]" />
         <Stack.Screen name="wishlist/index" />
+        <Stack.Screen name="upgrade/index" />
       </Stack>
     </>
   );
