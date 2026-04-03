@@ -87,7 +87,7 @@ export default function ScanTicketScreen() {
     if (images.length === 0) return;
     setScanning(true);
     try {
-      const res = await api.post(`/visits/${visitId}/scan-ticket`, { images });
+      const res = await api.post(`/visits/${visitId}/scan-ticket`, { images }, { timeout: 120000 });
       setResult(res.data.data);
     } catch (err: any) {
       Alert.alert("Error", err?.response?.data?.error || t("ticket.scanError"));
