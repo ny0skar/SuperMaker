@@ -14,7 +14,13 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.supermaker.app"
+      "bundleIdentifier": "com.supermaker.app",
+      "buildNumber": "7",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "SuperMaker necesita acceso a la cámara para escanear tickets de compra.",
+        "NSPhotoLibraryUsageDescription": "SuperMaker necesita acceso a tus fotos para seleccionar tickets de compra."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -40,7 +46,14 @@
           "faceIDPermission": "SuperMaker usa Face ID para acceder a tu cuenta de forma rápida y segura."
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "SuperMaker necesita acceso a tus fotos para seleccionar tickets de compra.",
+          "cameraPermission": "SuperMaker necesita acceso a la cámara para escanear tickets de compra."
+        }
+      ]
     ],
     "extra": {
       "router": {},
